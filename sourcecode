@@ -1,0 +1,176 @@
+# Source Code
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#define ll unsigned long long
+
+struct node
+{
+    ll primefactor;
+    ll primepower;
+    struct node* next;
+};
+
+bool fermat(ll ,int);
+//test for prime
+int gcd(ll,ll);
+//gcd between two numbers
+ll modulo(ll,ll,ll);
+//modular exponentiation
+ll lowestprime(ll);
+//to find the lowest prime that divides the given number
+ll exponentiaton(ll,ll);
+//exponentiation
+int powprime(ll,ll);
+//calculate the highest power of number that divides another
+void push(struct node**,ll,ll);
+//adding a new prime factor to the list
+void printlist(struct node*);
+//to print the list of prime factors
+
+
+int main()
+{
+    ll num;
+    printf("enter number\t:");
+
+    scanf("%lld",&num);
+
+    struct node* head= NULL;
+    ll factor,powcount,k;
+
+    while(num>1)
+    {
+        factor=lowestprime(num);
+        powcount=powprime(num,factor);
+        push(&(head),factor,powcount);
+        k=exponentiaton(factor,powcount);
+        num=num/k;
+    }
+
+    printlist(head);
+    return 0;
+}
+
+int powprime(ll x, ll y)
+{
+   int g=1;
+   if(x==y)
+    return g;
+   while((x%y)==0)
+   {
+       ++g;
+       x=x/y;
+
+   }
+   return g-1;
+}
+
+ll exponentiaton(ll x,ll y)
+{
+    if (y == 0)
+        return 1;
+    else if (y%2 == 0)
+        return exponentiaton(x, y/2)*exponentiaton(x, y/2);
+    else
+        return x*exponentiaton(x, y/2)*exponentiaton(x, y/2);
+}
+
+void push(struct node** head_ref,ll prime,ll powcount)
+{
+    struct node* new_node=(struct node*)malloc(sizeof(struct node));
+    new_node->primefactor=prime;
+    new_node->primepower=powcount;
+    new_node->next=*head_ref;
+    *head_ref=new_node;
+}
+
+void printlist(struct node* n)
+{
+    while(n!= NULL)
+    {
+        printf("prime factor:%lld\t",n->primefactor);
+        printf("power:%lld\n",n->primepower);
+        n= n->next;
+    }
+}
+
+ll lowestprime(ll num)
+{
+    if(fermat(num,50))
+    {
+        return num;
+    }
+    for(ll i=2;i<num/2;i++)
+    {
+        if(fermat(i,50))
+        {
+            if((num%i)==0)
+            {
+                return i;
+            }
+        }
+    }
+    return num;
+}
+
+bool fermat(ll num,int iteration)
+{
+    int i;
+    if(num==1)
+    {
+        return false;
+    }
+    for(i=0;i<iteration;i++)
+    {
+        srand(time(0));//seed for random number generator
+        ll a=rand()%(num-1)+1;//generating a random number less than the given number
+        if(gcd(a,num)!=1)
+/*if gcd between the two numbers is not 1 then they have a common factor
+thus it is a witness for compound number*/
+        {
+            return false;
+        }
+        else
+        {
+            if (modulo(a, num- 1, num) != 1)
+/*if a^(p-1)=1(mod p) then p is not a prime
+in many cases we can obtain such a for compound number p such the remainder modulo is 1
+the probability of getting such a is at most 1/2
+so we iterate  the test to decrease the probability to 1/2^50*/
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+int gcd(ll a,ll b)
+/*recursive function to calculate gcd implementing
+euler's algorithm for gcd*/
+{
+    if(b==0)
+    {
+        return a;
+    }
+    else
+    {
+        return gcd(b,a%b);
+    }
+}
+
+ll modulo(ll base,ll exponent,ll mod)
+{
+   ll x=1;
+   ll y= base;
+   while (exponent > 0) {
+        if (exponent % 2 == 1)
+            x = (x * y) % mod;
+        y = (y * y) % mod;
+        exponent = exponent / 2;
+    }
+    return x % mod;
+}
